@@ -48,6 +48,11 @@ def myprofile(request):
 
     # --- Dashboard Data (remains the same) ---
     total_footprint_this_month = 450.7
+    ranking_data = {
+        'city': {'rank': 12, 'total': 150},
+        'state': {'rank': 89, 'total': 1200},
+        'country': {'rank': 1520, 'total': 25000}
+    }
     category_data = {
         'labels': ["Transportation", "Energy", "Food", "Purchases"],
         'data': [150.2, 180.5, 90.0, 30.0],
@@ -83,6 +88,7 @@ def myprofile(request):
         'u_form': u_form,
         'p_form': p_form,
         'total_footprint_this_month': total_footprint_this_month,
+        'ranking_data': ranking_data,
         'category_data_json': json.dumps(category_data),
         'trends_data_json': json.dumps(trends_data),
         'streak_data_json': json.dumps(streak_data_for_chart),

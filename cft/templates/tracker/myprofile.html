@@ -92,6 +92,17 @@
         justify-content: center;
         font-size: 1.5rem;
     }
+     .icon.bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
     .flex-row {
         display: flex;
         flex-direction: row !important;
@@ -99,6 +110,13 @@
     .card-body.flex-column {
         display: flex;
         flex-direction: column;
+    }
+    /* NEW: Styles for Ranking Card */
+    .rank-display {
+        display: none;
+    }
+    .rank-display.active {
+        display: block;
     }
 
 </style>
@@ -179,13 +197,42 @@
             </button>
         </div>
 
-        <!-- Monthly Footprint Stat Card -->
-        <div class="card stat-card mb-4">
-            <div class="card-body flex-row align-items-center">
-                <div class="icon bg-success-light mr-3"><i class="fas fa-tree"></i></div>
-                <div>
-                    <h5 class="card-title mb-1">Monthly Footprint</h5>
-                    <p class="card-text h3 font-weight-bold">{{ total_footprint_this_month }} kg CO₂e</p>
+        <!-- Stat Cards Row -->
+        <div class="row">
+            <!-- Monthly Footprint Stat Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card stat-card h-100">
+                    <div class="card-body flex-row align-items-center">
+                        <div class="icon bg-success-light mr-3"><i class="fas fa-tree"></i></div>
+                        <div>
+                            <h5 class="card-title mb-1">Monthly Footprint</h5>
+                            <p class="card-text h3 font-weight-bold">{{ total_footprint_this_month }} kg CO₂e</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- NEW: Monthly Ranking Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card stat-card h-100">
+                    <div class="card-body flex-column align-items-start">
+                         <div class="d-flex justify-content-between w-100">
+                            <h5 class="card-title mb-1">Monthly Ranking</h5>
+                            <select id="rank-selector" class="form-control form-control-sm w-auto">
+                                <option value="city" selected>City</option>
+                                <option value="state">State</option>
+                                <option value="country">Country</option>
+                            </select>
+                        </div>
+                        <div id="rank-city" class="rank-display active mt-2">
+                             <p class="card-text h3 font-weight-bold">#{{ ranking_data.city.rank }} <span class="h6 text-muted">/ {{ ranking_data.city.total }}</span></p>
+                        </div>
+                        <div id="rank-state" class="rank-display mt-2">
+                            <p class="card-text h3 font-weight-bold">#{{ ranking_data.state.rank }} <span class="h6 text-muted">/ {{ ranking_data.state.total }}</span></p>
+                        </div>
+                        <div id="rank-country" class="rank-display mt-2">
+                             <p class="card-text h3 font-weight-bold">#{{ ranking_data.country.rank }} <span class="h6 text-muted">/ {{ ranking_data.country.total }}</span></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,6 +313,18 @@
         const categoryData = JSON.parse('{{ category_data_json|safe }}');
         const trendsData = JSON.parse('{{ trends_data_json|safe }}');
         const streakData = JSON.parse('{{ streak_data_json|safe }}');
+
+        // --- NEW: Rank Selector Logic ---
+        const rankSelector = document.getElementById('rank-selector');
+        if (rankSelector) {
+            rankSelector.addEventListener('change', function() {
+                document.querySelectorAll('.rank-display').forEach(el => el.classList.remove('active'));
+                const selectedRank = document.getElementById('rank-' + this.value);
+                if (selectedRank) {
+                    selectedRank.classList.add('active');
+                }
+            });
+        }
 
         // 1. Trends Line Chart (Last 6 Months)
         const trendsCtx = document.getElementById('trendsChart').getContext('2d');
