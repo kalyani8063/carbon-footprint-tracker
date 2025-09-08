@@ -10,6 +10,7 @@ import json
 from datetime import date, timedelta
 import random
 
+
 User = get_user_model()
 
 def register(request):
@@ -24,8 +25,7 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'tracker/register.html', {'form': form})
 
-def home(request):
-    return render(request, 'tracker/home.html')
+
 
 @decorators.login_required
 def myprofile(request):
@@ -97,3 +97,71 @@ def myprofile(request):
     }
     return render(request, 'tracker/myprofile.html', context)
 
+def home(request):
+    # This view now generates all the dummy data for the new, detailed homepage design.
+    
+    # Data for the emissions breakdown chart and table
+    emissions_breakdown = {
+        'labels': ['Transport', 'Housing', 'Food', 'Shopping'],
+        'data': [40, 35, 15, 10],
+        'colors': ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'],
+    }
+    
+    # Pre-zip the data here in the view for the template table
+    emissions_table_data = zip(
+        emissions_breakdown['labels'],
+        emissions_breakdown['data'],
+        emissions_breakdown['colors']
+    )
+    
+    # CORRECTED: Pass this as a direct dictionary for the HTML data-target attributes
+    global_stats = {
+        'totalUsers': 15847,
+        'co2Saved': 847,
+        'countriesCount': 67,
+    }
+
+    context = {
+        'summary_data': {
+            'this_month': 2.1,
+            'last_month': 2.4,
+            'improvement': 12.5,
+            'rank': 34,
+        },
+        # CORRECTED: Pass the direct dictionary
+        'global_stats': global_stats,
+        # This JSON version is still needed for the JavaScript file
+        'global_stats_json': json.dumps(global_stats),
+        'emissions_data_json': json.dumps(emissions_breakdown),
+        'emissions_table_data': emissions_table_data,
+        'country_comparison': {
+            'user_country_name': 'India',
+            'user_country_flag': 'https://flagcdn.com/w40/in.png',
+            'user_value': 8.2,
+            'user_percentage': 82,
+            'global_value': 4.8,
+            'global_percentage': 48,
+        },
+        'daily_challenge': {
+            'text': '🚶‍♂️ Walk 5000 steps today',
+            'impact': 'Potential CO2 saved: 1.2kg',
+        },
+        'recent_badges': [
+            {'icon': '🌟', 'name': 'Eco Warrior'},
+            {'icon': '⭐', 'name': 'Green Week'},
+            {'icon': '🌱', 'name': 'Plant Lover'},
+        ],
+        'leaderboard': [
+            {'rank_icon': '🥇', 'user': 'EcoMaster23', 'emission': '1.2 tons', 'reduction': '⬇️ 67%'},
+            {'rank_icon': '🥈', 'user': 'GreenGuru', 'emission': '1.4 tons', 'reduction': '⬇️ 54%'},
+            {'rank_icon': '🥉', 'user': 'PlantLover', 'emission': '1.6 tons', 'reduction': '⬇️ 48%'},
+            {'rank_icon': '4', 'user': 'ClimateChamp', 'emission': '1.8 tons', 'reduction': '⬇️ 42%'},
+            {'rank_icon': '5', 'user': 'EcoWarrior', 'emission': '1.9 tons', 'reduction': '⬇️ 38%'},
+        ],
+        'insights': {
+            'tip': {'icon': '💡', 'title': "Today's Eco Tip", 'content': 'Replace 1 car trip with biking today', 'impact': 'Potential save: 2.3kg CO2'},
+            'weather': {'icon': '☀️', 'title': "Weather Advice", 'content': 'Perfect day for cycling!', 'impact': 'Air quality: Good'},
+            'events': {'icon': '🌱', 'title': "Local Events", 'content': 'Tree planting drive this Saturday', 'impact': 'Green Park 10AM'},
+        }
+    }
+    return render(request, 'tracker/home.html', context)

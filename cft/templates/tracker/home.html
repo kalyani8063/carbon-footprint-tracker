@@ -1,6 +1,301 @@
-<!-- templates/tracker/home.html -->
 {% extends "tracker/base.html" %}
+{% load static %}
+
 {% block content %}
+
+<!-- External Libraries required by the new design -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<!-- Link to your new local CSS file -->
+<link href="{% static 'tracker/css/style.css' %}" rel="stylesheet">
+
+
+<!-- Main Dashboard Content -->
+<main class="dashboard">
+    <!-- 1. Hero Section with Motivational Quote -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="quote-container">
+                    <i class="fas fa-quote-left quote-icon"></i>
+                    <h1 id="motivationalQuote" class="hero-quote">Your journey to a greener tomorrow starts today</h1>
+                    <div class="quote-author">- EcoTracker Team</div>
+                </div>
+                <div class="hero-actions">
+                    <a href="#" class="btn-primary">
+                        <i class="fas fa-plus"></i> Quick Log Activity
+                    </a>
+                    <a href="{% url 'myprofile' %}" class="btn-secondary">
+                        <i class="fas fa-chart-bar"></i> View Full Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Personal Impact Summary -->
+    <section class="personal-summary">
+        <div class="container">
+            <div class="summary-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">📅</div>
+                    <div class="metric-value">{{ summary_data.this_month }}</div>
+                    <div class="metric-unit">tons CO2</div>
+                    <div class="metric-label">This Month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-value">{{ summary_data.last_month }}</div>
+                    <div class="metric-unit">tons CO2</div>
+                    <div class="metric-label">Last Month</div>
+                </div>
+                <div class="metric-card improvement">
+                    <div class="metric-icon">📈</div>
+                    <div class="metric-value">↓ {{ summary_data.improvement }}%</div>
+                    <div class="metric-label">Improvement</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">🏆</div>
+                    <div class="metric-value">#{{ summary_data.rank }}</div>
+                    <div class="metric-label">Your Rank</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Global Community Stats -->
+    <section class="global-stats">
+        <div class="container">
+            <h2 class="section-title">Global Community Impact</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🌍</div>
+                    <div class="stat-value" id="totalUsers" data-target="{{ global_stats.totalUsers }}">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value" id="co2Saved" data-target="{{ global_stats.co2Saved }}">0</div>
+                    <div class="stat-unit">tons</div>
+                    <div class="stat-label">CO2 Saved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📍</div>
+                    <div class="stat-value" id="countriesCount" data-target="{{ global_stats.countriesCount }}">0</div>
+                    <div class="stat-label">Countries</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Interactive Emissions Breakdown -->
+    <section class="emissions-breakdown">
+        <div class="container">
+            <h2 class="section-title">Emissions Breakdown</h2>
+            <div class="breakdown-grid">
+                <div class="breakdown-table">
+                    <h3>Category Analysis</h3>
+                    <div class="category-list">
+                        {% for label, data, color in emissions_table_data %}
+                        <div class="category-item">
+                            <span class="category-dot" style="background: {{ color }};"></span>
+                            <span class="category-name">{{ label }}</span>
+                            <span class="category-value">{{ data }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="breakdown-chart">
+                    <canvas id="emissionsChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Country Comparison -->
+    <section class="country-comparison">
+        <div class="container">
+            <h2 class="section-title">Country vs Global Average</h2>
+            <div class="comparison-card">
+                <div class="comparison-row">
+                    <div class="comparison-label">
+                        <img src="{{ country_comparison.user_country_flag }}" alt="{{ country_comparison.user_country_name }}" class="flag-icon">
+                        Your Country
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ country_comparison.user_percentage }}%; background: #EF4444;"></div>
+                        <span class="progress-value">{{ country_comparison.user_value }} tons/year</span>
+                    </div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-label">
+                        <span class="global-icon">🌍</span>
+                        Global Average
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ country_comparison.global_percentage }}%; background: #10B981;"></div>
+                        <span class="progress-value">{{ country_comparison.global_value }} tons/year</span>
+                    </div>
+                </div>
+                <button class="btn-outline">View Detailed Country Stats</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Global Heatmap -->
+    <section class="heatmap-section">
+        <div class="container">
+            <h2 class="section-title">Global Emissions Heatmap</h2>
+            <div class="heatmap-controls">
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-view="percapita">Per Capita</button>
+                    <button class="toggle-btn" data-view="total">Total Emissions</button>
+                </div>
+                <button class="btn-outline">
+                    <i class="fas fa-location-dot"></i> Zoom to My Location
+                </button>
+            </div>
+            <div class="heatmap-container">
+                <div id="worldMap" class="world-map">
+                    <div class="map-placeholder">
+                        <i class="fas fa-globe-americas"></i>
+                        <p>Interactive World Map</p>
+                        <div class="legend">
+                            <div class="legend-item"><span class="color-high"></span> High Emissions</div>
+                            <div class="legend-item"><span class="color-medium"></span> Medium Emissions</div>
+                            <div class="legend-item"><span class="color-low"></span> Low Emissions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Daily Engagement -->
+    <section class="daily-engagement">
+        <div class="container">
+            <h2 class="section-title">Daily Engagement</h2>
+            <div class="engagement-grid">
+                <div class="engagement-card challenge-card">
+                    <h3>🎯 Today's Challenge</h3>
+                    <div class="challenge-content">
+                        <p class="challenge-text">{{ daily_challenge.text }}</p>
+                        <p class="challenge-impact">{{ daily_challenge.impact }}</p>
+                        <div class="challenge-actions">
+                            <button class="btn-primary btn-small">Accept</button>
+                            <button class="btn-outline btn-small">Skip</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="engagement-card badges-card">
+                    <h3>🏆 Recent Badges</h3>
+                    <div class="badges-grid">
+                        {% for badge in recent_badges %}
+                        <div class="badge-item">
+                            <div class="badge-icon">{{ badge.icon }}</div>
+                            <div class="badge-name">{{ badge.name }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="engagement-card actions-card">
+                    <h3>⚡ Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button class="action-btn">
+                            <i class="fas fa-plus"></i> Log Activity
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-chart-line"></i> View Reports
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-target"></i> Set Goal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Community Leaderboard -->
+    <section class="leaderboard">
+        <div class="container">
+            <h2 class="section-title">🏆 Top Eco Champions</h2>
+            <div class="leaderboard-table">
+                <div class="leaderboard-header">
+                    <span>Rank</span>
+                    <span>User</span>
+                    <span>Monthly CO2</span>
+                    <span>Reduction</span>
+                </div>
+                {% for item in leaderboard %}
+                <div class="leaderboard-row">
+                    <span class="rank">{{ item.rank_icon }}</span>
+                    <span class="username">{{ item.user }}</span>
+                    <span class="emission">{{ item.emission }}</span>
+                    <span class="reduction positive">{{ item.reduction }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="btn-outline">View Full Leaderboard</button>
+        </div>
+    </section>
+
+    <!-- 9. Real-time Activity Feed -->
+    <section class="activity-feed">
+        <div class="container">
+            <h2 class="section-title">🔴 Live Community Actions</h2>
+            <div class="feed-container">
+                <!-- JS will populate this -->
+            </div>
+            <button class="btn-primary">Join the Movement!</button>
+        </div>
+    </section>
+
+    <!-- 10. Actionable Insights -->
+    <section class="insights">
+        <div class="container">
+            <h2 class="section-title">💡 Actionable Insights</h2>
+            <div class="insights-grid">
+                <div class="insight-card tip-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">{{ insights.tip.icon }}</span>
+                        <h3>{{ insights.tip.title }}</h3>
+                    </div>
+                    <p class="insight-content">{{ insights.tip.content }}</p>
+                    <p class="insight-impact">{{ insights.tip.impact }}</p>
+                </div>
+                <div class="insight-card weather-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">{{ insights.weather.icon }}</span>
+                        <h3>{{ insights.weather.title }}</h3>
+                    </div>
+                    <p class="insight-content">{{ insights.weather.content }}</p>
+                    <p class="insight-impact">{{ insights.weather.impact }}</p>
+                </div>
+                <div class="insight-card events-card">
+                    <div class="insight-header">
+                        <span class="insight-icon">{{ insights.events.icon }}</span>
+                        <h3>{{ insights.events.title }}</h3>
+                    </div>
+                    <p class="insight-content">{{ insights.events.content }}</p>
+                    <p class="insight-impact">{{ insights.events.impact }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+<!-- Pass Django data to JavaScript -->
+<script>
+    const emissionsData = JSON.parse('{{ emissions_data_json|safe }}');
+    const globalStatsData = JSON.parse('{{ global_stats_json|safe }}');
+</script>
+
+<!-- Link to your new local JS file -->
+<script src="{% static 'tracker/js/javascriipt.js' %}"></script>
 
 {% endblock content %}
 
