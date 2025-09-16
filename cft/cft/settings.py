@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tracker',
+    'django.contrib.humanize',
+    # 'tracker', # This is redundant because of TrackerConfig below
+
+    'widget_tweaks',
+    'tracker.apps.TrackerConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,75 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+ 
+{% block content %}
+<link href="{% static 'tracker/css/style.css' %}" rel="stylesheet">
+ 
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <section class="text-center mb-5">
+        <h1 class="section-title" style="font-size: 2.5rem;">Challenges</h1>
+        <p style="font-size: 1.1rem; color: #6B7280; max-width: 600px; margin: auto;">
+            Take on a challenge, track your progress, and make a real impact.
+        </p>
+    </section>
+ 
+    <!-- My Active Challenges (Placeholder for future) -->
+    <section class="mb-5">
+        <h2 class="section-title-secondary">My Active Challenges</h2>
+        <div class="engagement-card">
+            <p class="text-muted text-center">You haven't joined any active challenges yet. Find one below!</p>
+            <!-- In the future, a list of user's joined challenges would go here -->
+        </div>
+    </section>
+ 
+    <!-- Active Challenges -->
+    <section class="mb-5">
+        <h2 class="section-title-secondary">Active Challenges</h2>
+        <div class="summary-cards">
+            {% for challenge in active_challenges %}
+            <div class="metric-card" style="text-align: left;">
+                <h4 class="font-weight-bold mb-2">🎯 {{ challenge.title }}</h4>
+                <p class="metric-label" style="min-height: 70px;">{{ challenge.description|truncatewords:20 }}</p>
+                <small class="text-muted d-block mb-3">From: <a href="{% url 'community-detail' pk=challenge.community.pk %}">{{ challenge.community.name }}</a></small>
+                <div class="d-flex justify-content-between align-items-center w-100 mt-auto">
+                    <span class="font-weight-bold" style="color: #374151;"><i class="fas fa-clock mr-2"></i>Ends: {{ challenge.end_date|date:"M d" }}</span>
+                    {% if challenge.id in user_challenge_ids %}
+                        <button class="btn btn-success btn-sm" disabled>Joined</button>
+                    {% else %}
+                        <form action="{% url 'join-challenge' pk=challenge.pk %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-primary btn-sm">Join</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="engagement-card w-100">
+                <p class="text-center text-muted mb-0">No active challenges at the moment. Check back soon!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+ 
+    <!-- Completed Challenges -->
+    <section>
+        <h2 class="section-title-secondary">Completed Challenges</h2>
+        <div class="col-lg-11 mx-auto">
+            {% for challenge in completed_challenges %}
+            <div class="engagement-card mb-3 opacity-75">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">🏁 {{ challenge.title }}</h5>
+                        <small class="text-muted">From: <a href="{% url 'community-detail' pk=challenge.community.pk %}">{{ challenge.community.name }}</a></small>
+                    </div>
+                    <small class="text-muted font-weight-bold">Ended: {{ challenge.end_date|date:"F d, Y" }}</small>
+                </div>
+            </div>
+            {% empty %}
+            <div class="engagement-card text-center">
+                <p class="text-muted mb-0">No challenges have been completed yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock content %}
